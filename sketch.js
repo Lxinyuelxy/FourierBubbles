@@ -1,65 +1,118 @@
-var bubble = [];
-var rows;
-var cols;
-var AImage = [],
-	FImage = [],
-	PImage = []; 
+var rows; //34
+var cols; //17
+var fr = 30;
+var currentTime;
+var a = 0;
 
-function Bubble(position){
-	this.position = createVector(position.x,position.y);
-}
-Bubble.prototype.show = function(){
-	ellipse(this.position.x, this.position.y, 20, 20);
-}
+var paths = [];
+var dynamicPaths = [];
+var painting = false;
+var closedPaths = false;
+var currentPoint;
+var intervalBetweenBubbles = 40;
 
-function preload(){
-	AImage[2] = loadImage("data/A2.jpg");
-	FImage[2] = loadImage("data/A2"+i.toString()+".jpg");
-	PImage[2] = loadImage("data/P2"+i.toString()+".jpg");
-	for(var i = 0; i < 2; i++){
-		AImage[i] = loadImage("data/A"+i.toString()+".jpg");
-		FImage[i] = loadImage("data/A"+i.toString()+".jpg");
-		PImage[i] = loadImage("data/P"+i.toString()+".jpg");
-	}  
-}
 
 function setup() {
 	createCanvas(windowWidth, windowHeight);
-	rows = parseInt(windowWidth/20);
-	cols = parseInt(windowHeight/20);
-	console.log("rows = " + rows+",cols = "+cols);
+	frameRate(fr); 
+	rows = parseInt(windowWidth/40 + 0.5);
+	cols = parseInt(windowHeight/40 + 0.5);
+	console.log("rows = "+rows+",cols = "+cols);currentPoint = createVector(0,0);
 	
-	for(var i = 0; i < rows; i++){
-		bubble[i] = [];
-		for(var j = 0; j < cols; j++){
-			var position = createVector(20 + 40*i, 20 + 40*j);
-			bubble[i][j] = new Bubble(position);
-			console.log("x = "+bubble[i][j].position.x+",y = "+bubble[i][j].position.y);
+	rows = 0; 
+	for(var i = 0; i < windowWidth; i = i + intervalBetweenBubbles){
+		bubble[rows] = [];
+		cols = 0;
+		for(var j = 0; j < windowHeight; j = j + intervalBetweenBubbles){
+			var originPosition = createVector(i, j);
+			var currentPosition = createVector(i, j);
+			 bubble[rows][cols] = new Bubble(originPosition, currentPosition);
+			 cols++;
 		}
-	}	
+		rows++;
+	}
+	console.log("i = "+i+", j = "+j);
+	
+	console.log("windowWidth/2 = "+windowWidth/2+",windowHeight/2 = "+windowHeight/2);
+
 }
 
 function draw() {
 	clear();
+	currentTime = frameCount/fr;
 	background('rgba(0,255,0, 0.25)');	
 	drawBubble();
-    image(PImage[2], 0, 0);
-}
-
-function drawBubble(){
-	push(); 
-	fill(color('rgba(0,255,0, 0.25)'));
-	noStroke(); 
-	var position;
-	for(var i = 0; i < rows; i++){
-		for(var j = 0; j < cols; j++){
-			bubble[i][j].position.y = bubble[i][j].position.y + 20*sin(i/PI);
-			bubble[i][j].show();
-		}
+	if(painting){
+		drawBaseLine();
+		//getDynamicLine();
+		//drawDynamicLine();
 	}
-	pop();
 }
 
-function updateBubble(theBubble){
+
+function getDynamicLine(){
+	var offset = 0;
+	var v = 0;
+	for(var i = 0; i < paths.length; i++){
+		offset = update(paths[i].x, paths[i].y);
+		if(i == paths.length-1){
+			v = getTheNormalVector(paths[i], paths[0]);
+		}else{
+			v = getTheNormalVector(paths[i], paths[i+1]);
+		}
+		
+		v = p5.Vector.mult(v, offset);
+		dynamicPaths.push(v);
+		
+	}
+}
+
+function drawDynamicLine(){
+	for(var i = 0; i < dynamicPaths.length-1; i++){
+		line(dynamicPaths[i].x, dynamicPaths[i].y, dynamicPaths[i+1].x, dynamicPaths[i+1].y);
 	
+	}
+	if(closedPaths){
+		line(dynamicPaths[i].x, dynamicPaths[i].y, dynamicPaths[0].x, dynamicPaths[0].y);
+	}
+	
+}
+
+function getTheNormalVector(v1, v2){
+	var directionVector = p5.Vector.sub(v1, v2);
+	var temp_v;
+	if(directionVector.y != 0){
+		temp_v = createVector(1,(-1)*directionVector.x / directionVector.y);
+	}else{
+		temp_v = createVector(0, 1);
+	}
+	var normalVector = createVector(temp_v.x + v1.x, temp_v .y + v1.y);
+	//return normalVector.normalize();
+	return normalVector;
+}
+
+
+
+function mousePressed(){
+
+	painting = true;
+	closedPaths = false;
+	paths.splice(0,paths.length);
+	dynamicPaths.splice(0,paths.length);
+	currentPoint = createVector(mouseX, mouseY);
+	paths.push(currentPoint);
+	//console.log("paths.length = "+ paths.length);
+	
+}
+
+function mouseDragged(){
+	if(painting){
+		currentPoint = createVector(mouseX, mouseY);
+		paths.push(currentPoint);
+	}
+	
+}
+
+function mouseReleased(){
+	closedPaths = true;
 }
