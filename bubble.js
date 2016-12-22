@@ -1,6 +1,6 @@
 var bubble = [];
 
-function Bubble(originPosition, currentPosition){
+function Bubble(originPosition, currentPosition, amp, frep, phaze){
 	this.originPosition = createVector(originPosition.x, originPosition.y);
 	this.currentPosition = createVector(currentPosition.x, currentPosition.y);
 }
@@ -18,7 +18,7 @@ function drawBubble(){
 		var temp_x = parseInt(i/intervalBetweenBubbles);
 		for(var j = 0; j < windowHeight; j = j + intervalBetweenBubbles){			
 			var temp_y = parseInt(j/intervalBetweenBubbles);
-			offset = update(i,j);
+			offset = update(i, j);
 			bubble[temp_x][temp_y].currentPosition.y = bubble[temp_x][temp_y].originPosition.y +offset;
 			bubble[temp_x][temp_y].show();				
 			
